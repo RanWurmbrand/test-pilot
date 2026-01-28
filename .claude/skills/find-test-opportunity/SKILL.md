@@ -21,7 +21,26 @@ Look for:
 - Issues with labels like "bug", "test", "coverage"
 - Issues that describe testable behavior
 
-### 2. Documentation Gaps
+### 2. Recent Commits
+
+```bash
+git log --since="3 months ago" --pretty=format:"%s" --no-merges | head -20
+```
+
+Look for:
+- New features added recently
+- Bug fixes that might need regression tests
+- Refactored code that should be verified
+- Areas with active development
+
+Cross-reference commits with existing tests:
+```bash
+git log --since="3 months ago" --name-only --pretty=format: | grep -E "\.(ts|js|py)$" | sort | uniq -c | sort -rn | head -10
+```
+
+This shows which files changed most - prioritize testing actively developed code.
+
+### 3. Documentation Gaps
 
 Use Glob to find docs:
 ```
@@ -34,7 +53,7 @@ Read the docs and identify:
 - API endpoints mentioned
 - User workflows documented
 
-### 3. Code Coverage
+### 4. Code Coverage
 
 Use Glob to find source files:
 ```
@@ -48,7 +67,7 @@ Look for:
 - Error handling code
 - Recently modified files (check git log)
 
-### 4. Cross-reference with Existing Tests
+### 5. Cross-reference with Existing Tests
 
 Use Glob to find test files:
 ```

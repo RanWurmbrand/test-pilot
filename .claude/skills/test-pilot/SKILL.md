@@ -25,8 +25,10 @@ Use the Task tool to spawn an Explore agent:
 ```
 Task(subagent_type="Explore", prompt="Find test opportunities in this codebase:
 1. Check GitHub issues for test-related items (use: gh issue list --json number,title,labels)
-2. Look at documentation (README, docs/) for features that might lack tests
-3. Find source code with complex logic that needs coverage
+2. Check recent commits for new features or bug fixes (use: git log --since='3 months ago' --pretty=format:'%s' --no-merges | head -20)
+3. Look at documentation (README, docs/) for features that might lack tests
+4. Find source code with complex logic that needs coverage
+5. Cross-reference with existing tests to find gaps
 
 Return the top 3 candidates with:
 - name: what to test
