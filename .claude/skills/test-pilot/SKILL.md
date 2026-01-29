@@ -32,9 +32,14 @@ ls pytest.ini 2>/dev/null || ls pyproject.toml 2>/dev/null
 ls package.json 2>/dev/null && grep -E "jest|mocha|vitest" package.json
 ```
 ```
-Glob("**/unit/**/*.test.ts")
+Glob("**/__tests__/**/*.ts")
+Glob("**/*.test.ts")  # then exclude e2e paths from results
+Glob("**/*.spec.ts")
 Glob("**/test_*.py")
+Glob("**/*_test.py")
 ```
+
+**Important**: When searching for unit tests, exclude paths containing `/e2e/` from results to avoid counting e2e tests as unit tests.
 
 **Decision logic:**
 - If ONLY e2e tests exist → use e2e skills (`/find-e2e-opportunity`, `/analyze-e2e-coverage`, `/plan-e2e-test`, `/write-e2e-test`)
@@ -44,7 +49,25 @@ Glob("**/test_*.py")
 
 ## Workflow
 
-Execute these phases in order. **Ask for user confirmation before proceeding to each next phase.**
+Execute these phases in order.
+
+**CRITICAL: You MUST stop and wait for user input between EVERY phase. Do NOT proceed to the next phase until the user responds. This is mandatory - never skip user confirmation.**
+
+---
+
+### Phase 0.5: User Decision (if both test types exist)
+
+**STOP HERE if both e2e and unit tests were detected in Phase 0.**
+
+You MUST ask the user:
+> "I detected both e2e tests and unit tests in this repository.
+>
+> Which type should I focus on?
+> 1. E2E tests (UI workflows, integration)
+> 2. Unit tests (isolated logic, functions)
+> 3. Both (analyze both and show candidates from each)"
+
+**DO NOT PROCEED until the user answers. Wait for their response.**
 
 ---
 
@@ -66,7 +89,9 @@ Based on Phase 0 detection, use the appropriate find skill:
 - Find complex functions with branches that need coverage
 - Cross-reference with existing unit tests to find gaps
 
-**After Phase 1: Present the candidates to the user and ask:**
+**STOP: Present candidates and wait for user selection.**
+
+You MUST present the candidates and ask:
 > "I found these test opportunities:
 > 1. [Candidate 1] - [type] - [priority]
 > 2. [Candidate 2] - [type] - [priority]
@@ -74,7 +99,7 @@ Based on Phase 0 detection, use the appropriate find skill:
 >
 > Which one should I proceed with? (Enter number or describe what you want to test)"
 
-**Wait for user response before continuing.**
+**DO NOT PROCEED to Phase 2 until the user selects a candidate. Stop here and wait.**
 
 ---
 
@@ -98,7 +123,9 @@ Once user selects a candidate, use the appropriate analyze skill:
    - **Unit specific**: mocks_used, fixtures_used, input_variations_tested, branches_covered
 4. Identify what's NOT tested (the gaps)
 
-**After Phase 2: Present the coverage analysis and ask:**
+**STOP: Present coverage analysis and wait for user approval.**
+
+You MUST present the analysis and ask:
 > "Coverage analysis for [FEATURE]:
 >
 > Already tested:
@@ -111,7 +138,7 @@ Once user selects a candidate, use the appropriate analyze skill:
 >
 > Should I plan tests for these gaps? (yes/no/modify)"
 
-**Wait for user response before continuing.**
+**DO NOT PROCEED to Phase 3 until the user responds. Stop here and wait.**
 
 **Pass to next phases:**
 - covered_scenarios: what's already tested (DO NOT duplicate these)
@@ -138,7 +165,9 @@ If user approves, use the appropriate plan skill:
 4. Identify dependencies (mocks, fixtures, test data)
 5. **Unit specific**: Define inputs, expected outputs, edge cases
 
-**After Phase 3: Present the test plan and ask:**
+**STOP: Present the test plan and wait for user approval.**
+
+You MUST present the plan and ask:
 > "Test plan for [FEATURE]:
 >
 > File: [test file path]
@@ -150,7 +179,7 @@ If user approves, use the appropriate plan skill:
 >
 > Should I write this test? (yes/no/modify)"
 
-**Wait for user response before continuing.**
+**DO NOT PROCEED to Phase 4 until the user responds. Stop here and wait.**
 
 ---
 
@@ -201,11 +230,11 @@ If user approves, use the appropriate write skill:
 
 ## Critical Rules
 
-1. **Never invent APIs** - Only use methods that exist in the codebase
-2. **Never duplicate coverage** - Check what's tested before writing
-3. **Follow existing patterns** - Read existing tests first, copy their style
-4. **Focus on gaps** - Each test should add new value
-5. **Always ask before proceeding** - Get user confirmation between phases
+1. **MANDATORY: Stop between phases** - You MUST stop and wait for user input after each phase. Never proceed automatically. This is the most important rule.
+2. **Never invent APIs** - Only use methods that exist in the codebase
+3. **Never duplicate coverage** - Check what's tested before writing
+4. **Follow existing patterns** - Read existing tests first, copy their style
+5. **Focus on gaps** - Each test should add new value
 6. **Use the right skill** - e2e skills for UI workflows, unit skills for isolated logic
 
 ## Output

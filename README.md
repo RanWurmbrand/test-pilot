@@ -23,19 +23,19 @@ Restart Claude Code after installing.
 In any project with Claude Code:
 
 ```
-/test-pilot                      # Full pipeline - auto-detects e2e vs unit tests
+/test-pilot                       # Full pipeline - auto-detects e2e vs unit tests
 
 # E2E Testing
-/find-e2e-opportunity            # Find gaps in e2e test coverage
-/analyze-e2e-coverage <feature>  # Check existing e2e coverage
-/plan-e2e-test <feature>         # Plan e2e tests
-/write-e2e-test <feature>        # Write e2e test code
+/find-e2e-opportunity             # Find gaps in e2e test coverage
+/analyze-e2e-coverage <feature>   # Check existing e2e coverage for a feature
+/plan-e2e-test <feature>          # Plan e2e tests for a feature
+/write-e2e-test                   # Write e2e test code (uses context from previous phases)
 
 # Unit Testing
-/find-unit-opportunity           # Find gaps in unit test coverage
-/analyze-unit-coverage <feature> # Check existing unit coverage
-/plan-unit-test <feature>        # Plan unit tests
-/write-unit-test <feature>       # Write unit test code
+/find-unit-opportunity            # Find gaps in unit test coverage
+/analyze-unit-coverage <feature>  # Check existing unit coverage for a feature
+/plan-unit-test <feature>         # Plan unit tests for a feature
+/write-unit-test                  # Write unit test code (uses context from previous phases)
 ```
 
 ## Skills
@@ -69,6 +69,26 @@ Each phase asks for confirmation before proceeding.
 - **Step-by-step control** - Asks for confirmation between phases
 - **Dual-mode** - Supports both e2e and unit testing
 
+## Supported Frameworks
+
+**E2E**: Playwright, Cypress, WebDriverIO, Selenium
+
+**Unit**: Jest, Mocha, Vitest, pytest, unittest
+
+## Contributing
+
+Contributions welcome! Open to any improvements, bug fixes, or new ideas.
+
+Some areas I'd especially love help with:
+
+- **Framework-specific skills** - e.g., `/write-playwright-test`, `/write-pytest-test`
+- **Language-specific skills** - e.g., `/find-go-opportunity`, `/write-rust-test`
+- **Test type skills** - e.g., `/write-integration-test`, `/write-api-test`
+
+New skills should follow the existing SKILL.md format in `.claude/skills/`.
+
+PRs welcome at [github.com/RanWurmbrand/test-pilot](https://github.com/RanWurmbrand/test-pilot).
+
 ## Requirements
 
-- Claude Code v1.0.33 or later
+- Claude Code CLI
