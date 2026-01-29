@@ -1,13 +1,8 @@
----
-name: write-test
-description: Write actual test code following existing patterns
-argument-hint: <feature-name>
-allowed-tools: Read, Grep, Glob, Write, Bash
----
+# Write E2E Test
 
-# Write Test
+You are a test engineer. Your job is to write actual, working **e2e (end-to-end) test code**.
 
-You are a test engineer. Your job is to write actual, working test code.
+E2E tests verify complete user workflows through the UI - they interact with page objects, click buttons, fill forms, and verify outcomes.
 
 ## Input
 
@@ -23,6 +18,12 @@ Before writing ANY code, you MUST read existing tests to understand:
 Glob("tests/**/*.test.ts")
 Glob("tests/**/*.spec.ts")
 Glob("tests/**/test_*.py")
+```
+
+**E2E specific - find e2e tests:**
+```
+Glob("**/e2e/**/*.test.ts")
+Glob("**/e2e/**/*.spec.ts")
 ```
 
 Read at least 2-3 test files similar to what you're writing.
@@ -54,32 +55,45 @@ Grep("def click", "**/*.py")
 Grep("async.*wait", "**/*.ts")
 ```
 
+**E2E specific - find page objects:**
+```
+Glob("**/page-objects/**/*.ts")
+Glob("**/pages/**/*.ts")
+```
+
 Read the page objects and utilities. Know the real method signatures.
 
 ### Step 3: Write the Test
 
 Now write the test code following the exact patterns you learned.
 
-Structure:
+**E2E test structure:**
 ```typescript
 // Imports (copy pattern from existing tests)
-import { ... } from '...';
+import { test, expect } from '@playwright/test';
+import { SomePage } from '../page-objects/SomePage';
 
-// Test suite
-describe('Feature Name', () => {
+test.describe('Feature Name', () => {
+  let page: SomePage;
+
   // Setup (copy fixture pattern)
-  beforeEach(async () => {
+  test.beforeEach(async ({ ... }) => {
+    // Launch app, get page object
     ...
   });
 
   // Test case for gap #1
-  it('should handle expired session', async () => {
-    // Arrange
+  test('should complete user workflow', async () => {
+    // Arrange - setup initial state
     ...
-    // Act
-    ...
-    // Assert
-    ...
+
+    // Act - perform user actions using REAL page object methods
+    await page.navigateTo(...);
+    await page.clickButton(...);
+    await page.waitForElement(...);
+
+    // Assert - verify outcome
+    await expect(...).toBeVisible();
   });
 });
 ```
@@ -89,7 +103,7 @@ describe('Feature Name', () => {
 Use the Write tool to create the test file:
 
 ```
-Write(file_path="tests/path/to/test.ts", content="...")
+Write(file_path="tests/e2e/feature.test.ts", content="...")
 ```
 
 ### Step 5: Run the Test
@@ -126,17 +140,27 @@ If the test fails, read the error message carefully.
    - If they use single quotes, use single quotes
    - If they use specific fixture names, use those names
 
+5. **E2E specific: Use real page object methods**
+   - Read the page object files first
+   - Only use methods that actually exist
+   - Copy selector patterns from existing tests
+
+6. **E2E specific: Handle async properly**
+   - Await all page interactions
+   - Use proper waits, don't assume elements are ready
+
 ## Output
 
 After writing, report:
 ```json
 {
-  "file_created": "tests/auth/test_session_edge_cases.ts",
+  "file_created": "tests/e2e/feature.test.ts",
   "test_cases_written": [
-    "should handle expired session token",
-    "should prevent concurrent logins"
+    "should complete user workflow",
+    "should handle error state"
   ],
-  "patterns_followed": "Copied from tests/auth/login.test.ts",
+  "patterns_followed": "Copied from tests/e2e/existing.test.ts",
+  "page_objects_used": ["SomePage", "AnotherPage"],
   "test_run_result": "passed" | "failed" | "not_run"
 }
 ```

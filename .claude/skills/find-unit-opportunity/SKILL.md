@@ -1,12 +1,8 @@
----
-name: find-test-opportunity
-description: Find areas in the codebase that need test coverage
-allowed-tools: Read, Grep, Glob, Bash
----
+# Find Unit Test Opportunity
 
-# Find Test Opportunity
+You are a test opportunity scout. Your job is to find areas in the codebase that need **unit test coverage**.
 
-You are a test opportunity scout. Your job is to find areas in the codebase that need test coverage.
+Unit tests verify individual functions, methods, or classes in isolation - pure logic, data transformations, validations, calculations, etc.
 
 ## Strategies
 
@@ -22,6 +18,7 @@ Look for:
 - Issues with labels like "bug", "test", "coverage"
 - Issues that describe testable behavior
 - Issues that don't require significant new feature work
+- **Unit specific**: Issues about logic bugs, calculation errors, validation failures, edge cases
 
 ### 2. Recent Commits
 
@@ -34,6 +31,7 @@ Look for:
 - Bug fixes that might need regression tests
 - Refactored code that should be verified
 - Areas with active development
+- **Unit specific**: Commits mentioning functions, utils, helpers, validators, parsers, handlers
 
 Cross-reference commits with existing tests:
 ```bash
@@ -63,6 +61,7 @@ Read recent docs and identify:
 - API endpoints mentioned
 - User workflows documented
 - Features that appear in recent commit messages (actively maintained)
+- **Unit specific**: API docs, function documentation, utility descriptions, data format specs
 
 ### 4. Code Coverage
 
@@ -77,6 +76,7 @@ Look for:
 - Complex functions with many branches
 - Error handling code
 - Recently modified files (check git log)
+- **Unit specific**: Utility functions, validators, parsers, business logic, calculations, data transformations
 
 ### 5. Cross-reference with Existing Tests
 
@@ -87,7 +87,26 @@ Glob("**/*.test.ts")
 Glob("**/*.spec.ts")
 ```
 
+**Unit specific - also check for existing unit tests:**
+```
+Glob("**/unit/**/*.test.ts")
+Glob("**/unit/**/*.spec.ts")
+Glob("**/test_*.py")
+Glob("**/*_test.py")
+```
+
 Compare what's tested vs what exists in source.
+
+### 6. Find Complex Functions (Unit Specific)
+
+```
+Grep("function.*\(.*,.*,", "**/*.ts")
+Grep("def .*\(.*,.*,", "**/*.py")
+Grep("if.*else", "**/*.ts")
+Grep("switch|case", "**/*.ts")
+```
+
+Functions with multiple parameters or branching logic need unit tests.
 
 ## Output Format
 
@@ -97,20 +116,20 @@ Return a ranked list:
 {
   "candidates": [
     {
-      "name": "User authentication flow",
-      "type": "e2e",
-      "source": "github_issue",
-      "priority": "high",
-      "difficulty": "medium",
-      "justification": "Issue #42 reports login bugs, no e2e test exists"
-    },
-    {
       "name": "validateInput function",
       "type": "unit",
       "source": "code_coverage",
-      "priority": "medium",
+      "priority": "high",
       "difficulty": "easy",
       "justification": "Complex validation logic with no test coverage"
+    },
+    {
+      "name": "calculateDiscount utility",
+      "type": "unit",
+      "source": "recent_commits",
+      "priority": "medium",
+      "difficulty": "easy",
+      "justification": "Recently modified pricing logic, needs regression tests"
     }
   ]
 }
@@ -123,3 +142,4 @@ Prioritize candidates that are:
 2. Easy to test (clear inputs/outputs)
 3. Not already covered (check existing tests first)
 4. Recently active (not deprecated code)
+5. **Unit specific**: Pure functions, isolated logic, mockable dependencies, clear inputs/outputs
