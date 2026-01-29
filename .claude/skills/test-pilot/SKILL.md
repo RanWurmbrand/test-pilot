@@ -83,6 +83,11 @@ Return:
 
 **Wait for user response before continuing.**
 
+**Pass to next phases:**
+- covered_scenarios: what's already tested (DO NOT duplicate these)
+- gaps: what's missing (FOCUS on these)
+- related_test_files: files to study for patterns
+
 ---
 
 ### Phase 3: Plan the Test

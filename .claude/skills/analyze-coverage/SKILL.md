@@ -19,30 +19,38 @@ Feature to analyze: $ARGUMENTS
 
 ### Step 1: Find Related Test Files
 
-Search for tests that might cover this feature:
+**Extract keywords from the feature name.** Remove common words like "the", "a", "test", "add", "implement", "create", "new". Use the remaining meaningful keywords.
 
+Search for tests by filename:
 ```
-Glob("**/test*{feature_keyword}*.py")
-Glob("**/*{feature_keyword}*.test.ts")
-Glob("**/*{feature_keyword}*.spec.ts")
+Glob("**/test*{keyword}*.py")
+Glob("**/*{keyword}*.test.ts")
+Glob("**/*{keyword}*.spec.ts")
 ```
 
-Also search by content:
+Search for tests by content using grep:
+```bash
+grep -r -l -i -E "keyword1|keyword2" --include="*.test.ts" --include="*.spec.ts" --include="*_test.py" --include="test_*.py"
 ```
-Grep("{feature_keyword}", "**/*.test.ts")
-Grep("{feature_keyword}", "**/test_*.py")
+
+Also use the Grep tool:
+```
+Grep("{keyword}", "**/*.test.ts")
+Grep("{keyword}", "**/test_*.py")
 ```
 
 ### Step 2: Read and Analyze Test Files
 
 For each related test file, use Read to examine it.
 
-Extract:
-- Test function/method names
-- What scenario each test covers
-- What assertions are made
-- Edge cases handled
-- Error cases handled
+Extract in this structure:
+- **tested_functions**: list of {name, file} - what functions/methods have tests
+- **covered_scenarios**: list of {scenario description, test_name, file, assertions array} - what behaviors are verified
+- **edge_cases_covered**: list of edge case descriptions
+- **error_cases_covered**: list of error conditions tested
+
+Be exhaustive - list every distinct scenario you can identify.
+Focus on WHAT behavior is tested, not HOW it's implemented.
 
 ### Step 3: Identify Gaps
 

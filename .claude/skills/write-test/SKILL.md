@@ -34,6 +34,14 @@ Extract and memorize:
 - **Actions**: The actual method names for clicking, typing, waiting
 - **Assertions**: How they assert (expect, assert, should)
 
+**For e2e tests specifically:**
+- Find page objects and read their actual methods (don't invent)
+- Understand how the app/browser is launched and setup
+- Look for webview/browser interaction patterns
+- Check how existing e2e tests wait for elements (selectors, timeouts)
+- Find how messages/events are captured between components
+- Read the VSCode/app page object to see what methods actually exist
+
 **DO NOT INVENT METHODS.** Only use what you see in existing tests.
 
 ### Step 2: Find the Real APIs
@@ -84,17 +92,20 @@ Use the Write tool to create the test file:
 Write(file_path="tests/path/to/test.ts", content="...")
 ```
 
-### Step 5: Run the Test (Optional)
+### Step 5: Run the Test
 
-```bash
-npm test -- tests/path/to/test.ts
-# or
-pytest tests/path/to/test.py -v
-# or
-npx playwright test tests/path/to/test.ts
-```
+Detect the framework based on file extension and project setup, then run with the correct command:
 
-If it fails, read the error and fix.
+| Framework | File Pattern | Command |
+|-----------|--------------|---------|
+| Playwright | `.test.ts` in e2e folder | `npx playwright test <file>` |
+| Pytest | `test_*.py` or `*_test.py` | `pytest <file> -v` |
+| Jest | `.test.ts` or `.test.js` | `npm test -- <file>` |
+| Mocha | `.spec.js` | `npx mocha <file>` |
+
+Check what framework existing tests use and match it.
+
+If the test fails, read the error message carefully.
 
 ## Critical Rules
 

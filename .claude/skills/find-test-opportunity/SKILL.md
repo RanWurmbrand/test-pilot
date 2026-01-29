@@ -13,13 +13,15 @@ You are a test opportunity scout. Your job is to find areas in the codebase that
 ### 1. GitHub Issues
 
 ```bash
-gh issue list --json number,title,labels,assignees --limit 20
+gh issue list --state open --json number,title,labels,assignees,state --limit 20
 ```
 
+**Filter for issues that are OPEN and have no assignees.** Skip assigned or closed issues.
+
 Look for:
-- Unassigned issues
 - Issues with labels like "bug", "test", "coverage"
 - Issues that describe testable behavior
+- Issues that don't require significant new feature work
 
 ### 2. Recent Commits
 
@@ -48,10 +50,19 @@ Glob("**/*.md")
 Glob("**/docs/**/*")
 ```
 
-Read the docs and identify:
+**Only consider docs modified in the last 2 months.** Check modification date:
+```bash
+git log -1 --format=%cd --date=short -- <file>
+```
+Skip docs older than 2 months - they may describe deprecated features.
+
+**Cross-reference with recent commits.** Prioritize features that appear in commit messages from the last 2 months. Avoid features that seem deprecated or removed.
+
+Read recent docs and identify:
 - Features described but possibly not tested
 - API endpoints mentioned
 - User workflows documented
+- Features that appear in recent commit messages (actively maintained)
 
 ### 4. Code Coverage
 
