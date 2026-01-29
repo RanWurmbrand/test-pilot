@@ -29,7 +29,7 @@ cd ~/.test-pilot && git pull
 
 ```bash
 # Remove symlinks
-rm ~/.claude/skills/test-pilot ~/.claude/skills/analyze-e2e-coverage \
+rm -rf ~/.claude/skills/test-pilot ~/.claude/skills/analyze-e2e-coverage \
    ~/.claude/skills/analyze-unit-coverage ~/.claude/skills/find-e2e-opportunity \
    ~/.claude/skills/find-unit-opportunity ~/.claude/skills/plan-e2e-test \
    ~/.claude/skills/plan-unit-test ~/.claude/skills/write-e2e-test \
