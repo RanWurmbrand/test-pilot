@@ -2,21 +2,42 @@
 
 Claude Code skills for automated test generation. Finds coverage gaps and writes tests that add real value.
 
+**Requires [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)**
+
 ## Installation
 
 ```bash
-git clone https://github.com/RanWurmbrand/test-pilot.git
-cp -r test-pilot/.claude/skills/* ~/.claude/skills/
-rm -rf test-pilot
-```
+# Clone to a permanent location
+git clone https://github.com/RanWurmbrand/test-pilot.git ~/.test-pilot
 
-Or as a one-liner:
+# Create skills directory if needed
+mkdir -p ~/.claude/skills
 
-```bash
-git clone https://github.com/RanWurmbrand/test-pilot.git && cp -r test-pilot/.claude/skills/* ~/.claude/skills/ && rm -rf test-pilot
+# Symlink the skills
+ln -s ~/.test-pilot/.claude/skills/* ~/.claude/skills/
 ```
 
 Restart Claude Code after installing.
+
+## Updating
+
+```bash
+cd ~/.test-pilot && git pull
+```
+
+## Uninstalling
+
+```bash
+# Remove symlinks
+rm ~/.claude/skills/test-pilot ~/.claude/skills/analyze-e2e-coverage \
+   ~/.claude/skills/analyze-unit-coverage ~/.claude/skills/find-e2e-opportunity \
+   ~/.claude/skills/find-unit-opportunity ~/.claude/skills/plan-e2e-test \
+   ~/.claude/skills/plan-unit-test ~/.claude/skills/write-e2e-test \
+   ~/.claude/skills/write-unit-test
+
+# Remove the repo
+rm -rf ~/.test-pilot
+```
 
 ## Usage
 
@@ -89,6 +110,3 @@ New skills should follow the existing SKILL.md format in `.claude/skills/`.
 
 PRs welcome at [github.com/RanWurmbrand/test-pilot](https://github.com/RanWurmbrand/test-pilot).
 
-## Requirements
-
-- Claude Code CLI
