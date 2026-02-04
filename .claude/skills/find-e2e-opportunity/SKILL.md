@@ -1,3 +1,9 @@
+---
+name: find-e2e-opportunity
+description: Find areas in the codebase that need e2e test coverage
+allowed-tools: Read, Grep, Glob, Bash
+---
+
 # Find E2E Test Opportunity
 
 You are a test opportunity scout. Your job is to find areas in the codebase that need **e2e (end-to-end) test coverage**.

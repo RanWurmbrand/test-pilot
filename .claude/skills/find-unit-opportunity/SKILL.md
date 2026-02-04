@@ -1,3 +1,9 @@
+---
+name: find-unit-opportunity
+description: Find areas in the codebase that need unit test coverage
+allowed-tools: Read, Grep, Glob, Bash
+---
+
 # Find Unit Test Opportunity
 
 You are a test opportunity scout. Your job is to find areas in the codebase that need **unit test coverage**.

@@ -1,3 +1,10 @@
+---
+name: write-unit-test
+description: Write actual working unit test code
+argument-hint: <feature-name>
+allowed-tools: Read, Grep, Glob, Write, Bash
+---
+
 # Write Unit Test
 
 You are a test engineer. Your job is to write actual, working **unit test code**.

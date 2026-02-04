@@ -1,3 +1,10 @@
+---
+name: write-e2e-test
+description: Write actual working e2e test code
+argument-hint: <feature-name>
+allowed-tools: Read, Grep, Glob, Write, Bash
+---
+
 # Write E2E Test
 
 You are a test engineer. Your job is to write actual, working **e2e (end-to-end) test code**.
