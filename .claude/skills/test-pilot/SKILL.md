@@ -14,9 +14,11 @@ Find gaps in test coverage and write tests that add real value - not duplicates 
 
 ## How This Works
 
-You will spawn sub-agents using the Task tool for each phase. Each sub-agent writes its results to a file. You read those files to present results to the user and wait for confirmation before proceeding.
+You will spawn sub-agents using the Task tool for each phase. Each sub-agent reads its instructions from a skill file, does the work, and writes results to a file. You read those files to present results to the user and wait for confirmation before proceeding.
 
 **Output directory:** `.test-pilot/` (create if doesn't exist)
+
+**Skill files location:** The skill files are located alongside this orchestrator. Use the path relative to this skill's location.
 
 ## Phase 0: Detect Test Types in Repo
 
@@ -45,43 +47,45 @@ Glob("**/test_*.py")
 
 **STOP: If both exist, ask user which type to focus on. Wait for response.**
 
+Based on the test type (e2e or unit), you will use the corresponding skill files in subsequent phases.
+
 ---
 
 ## Phase 1: Find Test Opportunities
 
 Spawn a sub-agent to find test opportunities:
 
+**For e2e tests:**
 ```
 Task({
   subagent_type: "Explore",
-  prompt: "Find test opportunities in this codebase.
+  prompt: "Your task is to find e2e test opportunities in this codebase.
 
-STRATEGIES:
-1. GitHub Issues - Run: gh issue list --state open --json number,title,labels --limit 20
-   Look for bugs, test-related issues, UI issues (for e2e) or logic bugs (for unit)
+INSTRUCTIONS:
+1. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/find-e2e-opportunity/SKILL.md
+2. Follow ALL the instructions in that file exactly
+3. Execute the strategies described (GitHub issues, recent commits, documentation, code coverage, cross-reference with existing tests, find page objects)
+4. When done, write your output to: .test-pilot/phase1-candidates.json
 
-2. Recent Commits - Run: git log --since='3 months ago' --pretty=format:'%s' --no-merges | head -20
-   Look for new features, bug fixes, refactored code
+The output file must be valid JSON matching the format specified in the skill file.
+Find at least 3 candidates."
+})
+```
 
-3. Documentation - Find docs with Glob('**/*.md'), check for described features without tests
+**For unit tests:**
+```
+Task({
+  subagent_type: "Explore",
+  prompt: "Your task is to find unit test opportunities in this codebase.
 
-4. Cross-reference with existing tests - Find test files, compare what's tested vs what exists
+INSTRUCTIONS:
+1. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/find-unit-opportunity/SKILL.md
+2. Follow ALL the instructions in that file exactly
+3. Execute the strategies described (GitHub issues, recent commits, documentation, code coverage, cross-reference with existing tests, find complex functions)
+4. When done, write your output to: .test-pilot/phase1-candidates.json
 
-OUTPUT: Write a JSON file to .test-pilot/phase1-candidates.json with this format:
-{
-  'candidates': [
-    {
-      'name': 'feature name',
-      'type': 'e2e' or 'unit',
-      'source': 'github_issue' or 'recent_commit' or 'docs' or 'code_coverage',
-      'priority': 'high' or 'medium' or 'low',
-      'difficulty': 'easy' or 'medium' or 'hard',
-      'justification': 'why this needs testing'
-    }
-  ]
-}
-
-Find at least 3 candidates. Write the file when done."
+The output file must be valid JSON matching the format specified in the skill file.
+Find at least 3 candidates."
 })
 ```
 
@@ -102,7 +106,7 @@ Present candidates to user:
 
 Save user selection to file:
 ```
-Write(".test-pilot/user-selection.json", {"selected": "user's choice"})
+Write(".test-pilot/user-selection.json", {"selected": "user's choice", "type": "e2e or unit"})
 ```
 
 ---
@@ -111,45 +115,37 @@ Write(".test-pilot/user-selection.json", {"selected": "user's choice"})
 
 Spawn a sub-agent to analyze coverage for the selected feature:
 
+**For e2e tests:**
 ```
 Task({
   subagent_type: "Explore",
-  prompt: "Analyze test coverage for a specific feature.
+  prompt: "Your task is to analyze e2e test coverage for a specific feature.
 
-FIRST: Read .test-pilot/user-selection.json to see what feature was selected.
+INSTRUCTIONS:
+1. Read the user's selection from: .test-pilot/user-selection.json
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/analyze-e2e-coverage/SKILL.md
+3. Follow ALL the instructions in that file exactly, using the selected feature as your $ARGUMENTS
+4. Be thorough - missing a covered scenario means we might write a duplicate test
+5. When done, write your output to: .test-pilot/phase2-coverage.json
 
-PROCESS:
-1. Extract keywords from the feature name
-2. Search for related test files:
-   - Glob('**/test*{keyword}*.py')
-   - Glob('**/*{keyword}*.test.ts')
-   - Grep('{keyword}', '**/*.test.ts')
+The output file must be valid JSON matching the format specified in the skill file."
+})
+```
 
-3. Read each related test file
-4. Extract what's already tested:
-   - tested_functions
-   - covered_scenarios
-   - edge_cases_covered
-   - error_cases_covered
+**For unit tests:**
+```
+Task({
+  subagent_type: "Explore",
+  prompt: "Your task is to analyze unit test coverage for a specific feature.
 
-5. Identify GAPS - what's NOT tested
+INSTRUCTIONS:
+1. Read the user's selection from: .test-pilot/user-selection.json
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/analyze-unit-coverage/SKILL.md
+3. Follow ALL the instructions in that file exactly, using the selected feature as your $ARGUMENTS
+4. Be thorough - missing a covered scenario means we might write a duplicate test
+5. When done, write your output to: .test-pilot/phase2-coverage.json
 
-OUTPUT: Write to .test-pilot/phase2-coverage.json with this format:
-{
-  'feature': 'the selected feature',
-  'test_files_analyzed': ['file1', 'file2'],
-  'covered_scenarios': [
-    {'scenario': 'description', 'test_name': 'name', 'file': 'path'}
-  ],
-  'edge_cases_covered': ['case1', 'case2'],
-  'error_cases_covered': ['error1', 'error2'],
-  'gaps': [
-    {'scenario': 'what is missing', 'priority': 'high/medium/low', 'why_important': 'reason'}
-  ],
-  'recommendation': 'what to focus on'
-}
-
-Be thorough. Missing a covered scenario means we might write a duplicate test."
+The output file must be valid JSON matching the format specified in the skill file."
 })
 ```
 
@@ -179,51 +175,41 @@ Present analysis to user:
 
 Spawn a sub-agent to create a test plan:
 
+**For e2e tests:**
 ```
 Task({
   subagent_type: "Explore",
-  prompt: "Create a detailed test plan for identified gaps.
+  prompt: "Your task is to create a detailed e2e test plan.
 
-FIRST: Read these files:
-- .test-pilot/user-selection.json (the feature)
-- .test-pilot/phase2-coverage.json (the gaps to cover)
+INSTRUCTIONS:
+1. Read the context files:
+   - .test-pilot/user-selection.json (the feature)
+   - .test-pilot/phase2-coverage.json (the gaps to cover)
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/plan-e2e-test/SKILL.md
+3. Follow ALL the instructions in that file exactly
+4. Only plan tests for GAPS - never duplicate existing coverage
+5. When done, write your output to: .test-pilot/phase3-plan.json
 
-PROCESS:
-1. Find existing test files to understand conventions:
-   - Glob('**/*.test.ts')
-   - Glob('**/test_*.py')
-   Read 2-3 test files and note: directory structure, naming convention, framework, imports, fixtures, assertions
+The output file must be valid JSON matching the format specified in the skill file."
+})
+```
 
-2. Determine test file location based on conventions
+**For unit tests:**
+```
+Task({
+  subagent_type: "Explore",
+  prompt: "Your task is to create a detailed unit test plan.
 
-3. Design test cases for EACH GAP (not already-covered scenarios):
-   - Test name
-   - Setup required
-   - Actions to perform
-   - Assertions to make
+INSTRUCTIONS:
+1. Read the context files:
+   - .test-pilot/user-selection.json (the feature)
+   - .test-pilot/phase2-coverage.json (the gaps to cover)
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/plan-unit-test/SKILL.md
+3. Follow ALL the instructions in that file exactly
+4. Only plan tests for GAPS - never duplicate existing coverage
+5. When done, write your output to: .test-pilot/phase3-plan.json
 
-4. Identify dependencies: fixtures, mocks, test data
-
-OUTPUT: Write to .test-pilot/phase3-plan.json with this format:
-{
-  'test_file_path': 'where the test will go',
-  'framework': 'pytest/jest/playwright/etc',
-  'imports': ['import statements needed'],
-  'fixtures': [{'name': 'fixture', 'description': 'what it does'}],
-  'test_cases': [
-    {
-      'name': 'test name',
-      'description': 'what it tests',
-      'is_gap': true,
-      'setup': 'setup steps',
-      'actions': ['action1', 'action2'],
-      'assertions': ['assertion1', 'assertion2']
-    }
-  ],
-  'notes': 'any additional notes'
-}
-
-Only plan tests for gaps. Never duplicate existing coverage."
+The output file must be valid JSON matching the format specified in the skill file."
 })
 ```
 
@@ -252,39 +238,57 @@ Present plan to user:
 
 Spawn a sub-agent to write the test:
 
+**For e2e tests:**
 ```
 Task({
   subagent_type: "general-purpose",
-  prompt: "Write test code based on the approved plan.
+  prompt: "Your task is to write e2e test code.
 
-FIRST: Read these files:
-- .test-pilot/phase3-plan.json (the test plan)
-- .test-pilot/phase2-coverage.json (to avoid duplicating covered scenarios)
+INSTRUCTIONS:
+1. Read the context files:
+   - .test-pilot/phase3-plan.json (the test plan)
+   - .test-pilot/phase2-coverage.json (to avoid duplicating covered scenarios)
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/write-e2e-test/SKILL.md
+3. Follow ALL the instructions in that file EXACTLY, especially:
+   - MANDATORY: Read 2-3 existing test files first
+   - MANDATORY: Find and read page objects to understand real APIs
+   - NEVER invent methods - only use what exists
+   - NEVER guess imports - copy from existing tests
+   - Match style exactly
+4. Use the Write tool to create the test file
+5. When done, write a summary to: .test-pilot/phase4-result.json
 
-MANDATORY BEFORE WRITING:
-1. Read 2-3 existing test files to learn exact patterns:
-   - Import patterns
-   - Fixture patterns
-   - Assertion style
-   - How they structure tests
+The result file should contain:
+{
+  'file_created': 'path to test file',
+  'test_cases_written': ['test1', 'test2'],
+  'patterns_followed': 'which existing test was used as reference',
+  'ready_to_run': true/false
+}"
+})
+```
 
-2. Find and read source files or page objects to understand real APIs
-   - DO NOT INVENT METHODS
-   - Only use methods that actually exist
+**For unit tests:**
+```
+Task({
+  subagent_type: "general-purpose",
+  prompt: "Your task is to write unit test code.
 
-3. Write the test following exact patterns from existing tests
+INSTRUCTIONS:
+1. Read the context files:
+   - .test-pilot/phase3-plan.json (the test plan)
+   - .test-pilot/phase2-coverage.json (to avoid duplicating covered scenarios)
+2. Read the skill file at: /home/rwurmbra/Desktop/projects/test-pilot/.claude/skills/write-unit-test/SKILL.md
+3. Follow ALL the instructions in that file EXACTLY, especially:
+   - MANDATORY: Read 2-3 existing test files first
+   - MANDATORY: Read the source file to understand the function/class under test
+   - NEVER invent methods - only use what exists
+   - NEVER guess imports - copy from existing tests
+   - Match style exactly
+4. Use the Write tool to create the test file
+5. When done, write a summary to: .test-pilot/phase4-result.json
 
-4. Use the Write tool to create the test file at the path specified in the plan
-
-CRITICAL RULES:
-- NEVER invent methods - only use what exists in the codebase
-- NEVER guess imports - copy from existing tests
-- NEVER duplicate coverage - only test the gaps
-- Match style exactly - quotes, naming, structure
-
-After writing, report what was created.
-
-OUTPUT: Write to .test-pilot/phase4-result.json with:
+The result file should contain:
 {
   'file_created': 'path to test file',
   'test_cases_written': ['test1', 'test2'],
@@ -316,10 +320,11 @@ If user says yes, run the test with appropriate command based on framework.
 
 1. **MANDATORY: Stop between phases** - You MUST stop and wait for user input after each phase
 2. **Use Task tool** - Each phase spawns a sub-agent to do the heavy work
-3. **File-based communication** - Sub-agents write to `.test-pilot/` directory
-4. **Read before presenting** - Always read the output file before showing results to user
-5. **Never invent APIs** - Sub-agents must only use methods that exist
-6. **Never duplicate coverage** - Always check what's already tested
+3. **Sub-agents read skill files** - Each sub-agent reads the full instructions from the corresponding skill file
+4. **File-based communication** - Sub-agents write to `.test-pilot/` directory
+5. **Read before presenting** - Always read the output file before showing results to user
+6. **Never invent APIs** - Sub-agents must only use methods that exist
+7. **Never duplicate coverage** - Always check what's already tested
 
 ## Cleanup
 
