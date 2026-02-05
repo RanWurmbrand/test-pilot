@@ -59,11 +59,41 @@ In any project with Claude Code:
 /write-unit-test                  # Write unit test code (uses context from previous phases)
 ```
 
+## Architecture
+
+TestPilot uses a **sub-agent orchestration** pattern:
+
+1. The main `/test-pilot` skill acts as an orchestrator
+2. For each phase, it spawns a dedicated sub-agent using the Task tool
+3. Each sub-agent has its own clean context window
+4. Sub-agents read the full skill instructions and write results to files
+5. The orchestrator reads these files and presents results to the user
+
+### Why Sub-Agents?
+
+Agents have a context window - what they read and remember during a session. This window has a limit, and quality can degrade as it fills up.
+
+TestPilot reads project docs, searches GitHub issues, and browses the codebase. These steps add a lot to the context window.
+
+By using sub-agents with separate context windows, the heavy searching happens in isolation. Only the results come back to the main agent. This keeps the main context clean and focused, maintaining consistent quality throughout the session.
+
+### File-Based Communication
+
+Sub-agents write results to `.test-pilot/` in your project directory:
+
+- `phase1-candidates.json` - Test opportunities found
+- `user-selection.json` - What you selected to test
+- `phase2-coverage.json` - Coverage analysis and gaps
+- `phase3-plan.json` - Detailed test plan
+- `phase4-result.json` - Final result after writing tests
+
+This directory is cleaned up after completion.
+
 ## Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `test-pilot` | Main orchestrator - auto-detects test type, runs all phases with confirmations |
+| `test-pilot` | Orchestrator - spawns sub-agents, manages phases, handles user confirmations |
 | `find-e2e-opportunity` | Find untested user workflows and UI interactions |
 | `find-unit-opportunity` | Find untested functions and logic branches |
 | `analyze-e2e-coverage` | Analyze existing e2e tests (Playwright, Cypress) |
@@ -75,10 +105,11 @@ In any project with Claude Code:
 
 ## How It Works
 
-1. **Find opportunities** - Scans issues, commits, docs, and code for untested areas
-2. **Analyze coverage** - Reads existing tests to understand what's already covered
-3. **Plan tests** - Creates test plan focusing only on gaps
-4. **Write tests** - Generates code following existing patterns (never invents APIs)
+1. **Phase 0: Detect** - Identifies if project has e2e tests, unit tests, or both
+2. **Phase 1: Find opportunities** - Sub-agent scans issues, commits, docs for untested areas
+3. **Phase 2: Analyze coverage** - Sub-agent reads existing tests to find gaps
+4. **Phase 3: Plan tests** - Sub-agent creates test plan focusing only on gaps
+5. **Phase 4: Write tests** - Sub-agent generates code following existing patterns
 
 Each phase asks for confirmation before proceeding.
 
@@ -89,6 +120,7 @@ Each phase asks for confirmation before proceeding.
 - **Real APIs only** - Never invents methods, only uses what exists
 - **Step-by-step control** - Asks for confirmation between phases
 - **Dual-mode** - Supports both e2e and unit testing
+- **Clean context** - Sub-agents keep the main conversation focused
 
 ## Supported Frameworks
 
@@ -109,4 +141,3 @@ Some areas I'd especially love help with:
 New skills should follow the existing SKILL.md format in `.claude/skills/`.
 
 PRs welcome at [github.com/RanWurmbrand/test-pilot](https://github.com/RanWurmbrand/test-pilot).
-
